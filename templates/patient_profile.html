@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Profile</title>
+</head>
+<body>
+    <h1>Patient Profile</h1>
+    <p>Welcome, {{ current_user.username }}!</p>
+    <p>Email: {{ current_user.email }}</p>
+    <p>Role: {{ current_user.role }}</p>
+
+    <!-- Add additional profile information here -->
+
+    <a href="{{ url_for('remote_doctor.logout') }}">Logout</a>
+</body>
+</html>
+

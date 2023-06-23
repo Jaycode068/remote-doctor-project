@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Doctor Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to the Doctor Dashboard</h1>
+    
+    <!-- Display relevant information for doctors -->
+    <h2>Appointments</h2>
+    <ul>
+        {% for appointment in appointments %}
+            <li>{{ appointment.date }} - {{ appointment.patient_name }}</li>
+        {% endfor %}
+    </ul>
+    
+    <h2>Patient Records</h2>
+    <ul>
+        {% for record in patient_records %}
+            <li>{{ record.patient_name }} - {{ record.diagnosis }}</li>
+        {% endfor %}
+    </ul>
+    
+    <!-- Other dashboard components or sections -->
+</body>
+</html>
+

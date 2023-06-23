@@ -18,6 +18,7 @@ class User(Base, UserMixin):
     username = Column(String(50), unique=True, nullable=False)
     password = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, nullable=False)
+    role = Column(String(50))  # Add the role column
 
     def get_id(self):
         return str(self.id)
@@ -38,6 +39,7 @@ class User(Base, UserMixin):
         self.username = username
         self.password = password
         self.email = email
+        self.role = role
 
     def __repr__(self):
         return f"User(id={self.id}, username={self.username}, email={self.email})"
