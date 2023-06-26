@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Remote Doctor Application</title>
+    <style>
+        body {
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .main-content {
+            margin: 0 auto;
+            padding: 20px;
+            display: none; /* Hide the main content by default */
+        }
+        .main-content.active {
+            display: block; /* Show the main content when active */
+        }
+        .sidebar {
+            background-color: #2ecc71;
+            color: #fff;
+            width: 200px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 20px;
+        }
+
+        .sidebar a {
+            color: #fff;
+            text-decoration: none;
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 150px;
+            text-align: center;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar a:hover {
+            background-color: #27ae60;
+        }
+
+        /* Add margin-bottom to create space */
+        .sidebar a#profile-settings {
+            margin-bottom: 20px;
+        }
+
+        /* Adjust dropdown position */
+        .dropdown {
+            position: relative;
+        }
+
+        .main-content {
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2ecc71;
+            text-align: center;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #1e995a;
+            color:#fff;
+            font-size: 14px;
+            min-width: 150px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        #profile-form,
+        #password-form {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .form-group button {
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var dashboardTab = document.getElementById("dashboard-tab");
+        var mainContent = document.getElementById("main-content");
+
+        dashboardTab.addEventListener("click", function(event) {
+            event.preventDefault();
+            mainContent.classList.toggle("active");
+        });
+
+        var appointmentsTab = document.getElementById("appointments-tab");
+        var appointmentContent = document.getElementById("appointment-content");
+
+        appointmentsTab.addEventListener("click", function(event) {
+            event.preventDefault();
+            appointmentContent.classList.toggle("active");
+        });
+
+        var profileSettings = document.getElementById("profile-settings");
+        var dropdownContent = document.getElementById("dropdown-content");
+        var profileForm = document.getElementById("profile-form");
+        var passwordForm = document.getElementById("password-form");
+
+        profileSettings.addEventListener("click", function(event) {
+            event.preventDefault();
+            dropdownContent.classList.toggle("active");
+        });
+
+        var editProfileLink = document.getElementById("edit-profile-link");
+        var changePasswordLink = document.getElementById("change-password-link");
+
+        editProfileLink.addEventListener("click", function(event) {
+            event.preventDefault();
+            profileForm.style.display = "block";
+            passwordForm.style.display = "none";
+        });
+
+        changePasswordLink.addEventListener("click", function(event) {
+            event.preventDefault();
+            profileForm.style.display = "none";
+            passwordForm.style.display = "block";
+        });
+    });
+</script>
+</head>
+<body>
+    <div class="sidebar">
+        <a id="dashboard-tab" href="#">Dashboard</a>
+        <a id="appointments-tab" href="#">Appointments</a>
+        <div class="dropdown">
+            <a id="profile-settings" href="#">Profile Settings</a>
+            <div id="dropdown-content" class="dropdown-content">
+                <a id="edit-profile-link" href="#">Edit Profile</a>
+                <a id="change-password-link" href="#">Change Password</a>
+            </div>
+        </div>
+        <!-- Add a space between Profile Settings and Your Health Record -->
+        <div style="margin-top: 20px;"></div>
+
+        <div class="dropdown">
+            <a href="#">Your Health Record</a>
+            <div class="dropdown-content">
+                <a href="#">View Health Record</a>
+                <a href="#">Update Health Record</a>
+            </div>
+        </div>
+        <!-- Add a space between Your Health Record and Prescription -->
+        <div style="margin-top: 20px;"></div>
+        <a href="#">Prescription</a>
+        <a href="#">Support/Help</a>
+        <a href="#">Logout</a>
+    </div>
+
+    <div class="main-content" id="main-content">
+       <h1>Welcome to Remote Doctor</h1>
+       <!-- Place your content here -->
+    </div>
+
+    <div class="main-content" id="appointment-content">
+       <h2>Appointment</h2>
+       <ul>
+           <li><a href="#">Appointment history</a></li>
+           <li><a href="#">Schedule an appointment</a></li>
+           <li><a href="#">Cancel an appointment</a></li>
+       </ul>
+    </div>
+
+    <div class="main-content" id="profile-form">
+        <h2>Edit Profile</h2>
+        <form>
+            <div class="form-group">
+               <label for="name">Name</label>
+               <input type="text" id="name" name="name" placeholder="Enter your name">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <label for="address">Address</label>
+                <input type="text" id="address" name="address" placeholder="Enter your address">
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone number</label>
+                <input type="text" id="phone" name="phone" placeholder="Enter your phone number">
+            </div>
+            <div class="form-group">
+                <button type="submit">Save Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="main-content" id="password-form">
+        <h2>Change Password</h2>
+        <form>
+	    <div class="form-group">
+	        <label for="old-password">Old Password</label>
+	        <input type="password" id="old-password" name="old-password" placeholder="Enter your old password">
+	    </div>
+	    <div class="form-group">
+	        <label for="new-password">New Password</label>
+	        <input type="password" id="new-password" name="new-password" placeholder="Enter your new password">
+	    </div>
+	    <div class="form-group">
+	        <label for="confirm-password">Confirm Password</label>
+	        <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm your new password">
+	    </div>
+	    <div class="form-group">
+	       <button type="submit">Save Details</button>
+	    </div>
+        </form>
+    </div>
+</body>
+</html>
