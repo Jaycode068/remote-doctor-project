@@ -28,14 +28,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+mysqlconnector://johnson:Ibelieve
 
 db = SQLAlchemy(app)
 
+@app.route('/index.html')
+def index():
+    return render_template('index.html')
 
 # Register the blueprint
 app.register_blueprint(bp)
 
+
 # Define routes and views
 @app.route('/')
 def home():
-    return 'Welcome to the Remote Doctor Application!'
+    return render_template('webpage.html')
 
 
 # Run the Flask application if executed directly
