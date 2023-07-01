@@ -35,7 +35,7 @@ class User(Base, UserMixin):
     def is_anonymous(self):
         return False
 
-    def __init__(self, username, password, email):
+    def __init__(self, username, password, email, role=None):
         self.username = username
         self.password = password
         self.email = email
@@ -53,7 +53,8 @@ class Doctor(Base):
     email = Column(String(100))
     phone = Column(String(20))
     address = Column(String(100))
-    rating = Column(Float)
+    username = Column(String(50))
+    password = Column(String(100))
 
     def to_dict(self):
         return {
@@ -63,26 +64,27 @@ class Doctor(Base):
             'email': self.email,
             'phone': self.phone,
             'address': self.address,
-            'rating': self.rating
+            'username': self.username
         }
 
-    def __init__(self, id, name, speciality, email, phone, address, rating):
+    def __init__(self, id, name, specialty, email, phone, address, username, password):
         self.id = id
         self.name = name
-        self.speciality = speciality
+        self.specialty = specialty
         self.email = email
         self.phone = phone
         self.address = address
-        self.rating = rating
+        self.username = username
+        self.password = password
 
     def __repr__(self):
         return (
             f"Doctor(id={self.id}, name={self.name}, specialty={self.specialty}, "
-            f"email={self.email}, phone={self.phone}, address={self.address}, rating={self.rating})"
+            f"email={self.email}, phone={self.phone}, address={self.address})"
         )
 
 
-class Patient(Base):
+class Patient(Base, UserMixin):
     __tablename__ = 'patients'
 
     id = Column(Integer, primary_key=True)
@@ -92,7 +94,13 @@ class Patient(Base):
     email = Column(String(100))
     phone = Column(String(20))
     address = Column(String(100))
+    username = Column(String(50))
+    password = Column(String(100))
 
+    def is_active(self):
+        # Implement the logic to determine if the patient is active
+        return True  # or False based on your criteria
+    
 
     def to_dict(self):
         return {
@@ -103,16 +111,22 @@ class Patient(Base):
             'email': self.email,
             'phone': self.phone,
             'address': self.address,
+            'username': self.username
         }
 
+    @staticmethod
+    def get_by_username(username):
+        return Session().query(Patient).filter_by(username=username).first()
 
-    def __init__(self, name, age, gender, email, phone, address):
+    def __init__(self, name, age, gender, email, phone, address, username, password):
         self.name = name
         self.age = age
         self.gender = gender
         self.email = email
         self.phone = phone
         self.address = address
+        self.username = username
+        self.password = password
 
     def __repr__(self):
         return f"Patient(id={self.id}, name={self.name}, age={self.age}, gender={self.gender}, email={self.email}, phone={self.phone}, address={self.address})"

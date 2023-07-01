@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Remote Doctor Application</title>
+    <style>
+        body {
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .sidebar {
+            background-color: #2ecc71;
+            color: #fff;
+            width: 200px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 80px;
+        }
+
+        .sidebar a {
+            color: #fff;
+            text-decoration: none;
+            margin-bottom: 10px;
+            padding: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+         .sidebar a:hover {
+            background-color: #27ae60; /* Change background color on hover */
+        }
+
+        .header {
+            background-color: #fff;
+            color: #1e824c;
+            padding: 10px;
+            text-align: center;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            flex-grow: 1; /* Allow the text to take up remaining space */
+            text-align: center;
+        }
+
+         .header-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1; /* Allow the content to take up remaining space */
+        }
+
+        .header-content h1 {
+            margin: 0;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .header-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-buttons button {
+            background-color: #1e824c;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+       
+        .patient-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: 0 auto;
+            max-width: 800px; /* Adjust the width as per your preference */
+        }
+
+
+        .footer {
+            background-color: #1e824c;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <a id="dashboard-tab" href="#">Dashboard</a>
+        <a href="#" id="doctors-tab">Doctors</a>
+        <a id="appointments-tab" href="#">Appointments</a>
+        <a href="#" id="medical-record">Medical Records</a>
+        <a id="profile-settings" href="#">Profile Settings</a>
+        <a href="{{ url_for('remote_doctor.logout') }}">Logout</a>
+    </div>
+
+    <div class="header">
+        <div class="header-content">
+            <h1>WELCOME TO REMOTE DOCTOR</h1>
+            <div class="header-buttons">
+                <button id="notification-button">Notification</button>
+                <button id="logout-button" onclick="logout()"><a href="{{ url_for('remote_doctor.logout') }}">Logout</a></button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="main-content">
+       <!-- Main Content Here -->
+       <div id="patient-info" class="patient-info"></div>
+    </div>
+
+    <div class="footer">
+        <p>All rights reserved</p>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const dashboardButton = document.getElementById('dashboard-tab');
+        const doctorsButton = document.getElementById('doctors-tab');
+        const mainContent = document.querySelector('.main-content');
+        const patientInfo = document.getElementById('patient-info');
+        const doctorsInfo = document.getElementById('doctors-info');
+        const logoutButton = document.getElementById('logout-button');
+
+
+        logoutButton.addEventListener('click', () => {
+            fetch('/logout', { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        // Redirect to the login page or perform other actions
+                        window.location.href = '/login';
+                    } else {
+                        console.log('Logout failed');
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+        });
+
+        function logout() {
+            window.location.href = document.querySelector('#logout-button a').href;
+}
+
+        dashboardButton.addEventListener('click', () => {
+            fetch('/patient') // Replace with the correct route to fetch patient data
+                .then(response => response.json())
+                .then(data => {
+                    const loggedInUsername = '{{ current_user.username }}';
+                    const html = `<h2>Hello, ${loggedInUsername}!</h2>`;
+                    patientInfo.innerHTML = html;
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+
+            mainContent.classList.add('active');
+        });
+        doctorsButton.addEventListener('click', () => {
+            fetch('/doctors')
+                .then(response => response.json())
+                .then(data => {
+                    const doctors = data;
+                    let html = '';
+                    doctors.forEach(doctor => {
+                        const status = doctor.is_online ? 'Online' : 'Offline';
+                        html += '<div class="doctor">';
+                        html += `<p>ID: ${doctor.id}</p>`;
+                        html += `<p>Name: ${doctor.name}</p>`;
+                        html += `<p>Status: ${status}</p>`;
+                        html += '</div>';
+                    });
+                    doctorsInfo.innerHTML = html;
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+
+            mainContent.classList.add('active');
+        });
+
+      });  
+ 
+    </script>
+
+
+
+</body>
+</html>
+

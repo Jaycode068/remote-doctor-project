@@ -1,10 +1,12 @@
-from flask import Blueprint, jsonify, request, render_template, url_for, redirect
+from flask import Blueprint, jsonify, request, render_template, url_for, redirect, flash
 from remote_doctor.models import Doctor, Patient, Appointment, MedicalRecord, User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from flask_login import login_user, logout_user, current_user, login_required
 from functools import wraps
 from flask import abort
+import logging
+import traceback
 
 
 engine = create_engine("mysql+mysqlconnector://johnson:Ibelieve1!@localhost:3306/remote_doctor")
@@ -12,54 +14,107 @@ Session = sessionmaker(bind=engine)
 
 bp = Blueprint('remote_doctor', __name__)
 
+@bp.route('/')
+def landing_page():
+    return render_template('webpage.html')
 
-# Registration route
-@bp.route('/register', methods=['GET', 'POST'])
+@bp.route('/main')
+#@login_required  # Require login to access the main page
+def main():
+    # Add the logic to retrieve data for the main page and render the template
+    return render_template('main.html')
 
-def register():
-    print("Register view function is executing")
 
+@bp.route('/register/patient', methods=['GET', 'POST'])
+def register_patient():
     if request.method == 'POST':
-        # Get the form data
+        # Get the form data from the request
+        name = request.form['name']
+        age = int(request.form['age'])
+        gender = request.form['gender']
+        email = request.form['email']
+        phone = request.form['phone']
+        address = request.form['address']
         username = request.form['username']
         password = request.form['password']
-        email = request.form['email']
 
-        # Validate the form data
-        # Check if the username is already taken
+        # Create a new Patient instance with the form data
+        patient = Patient(name=name, age=age, gender=gender, email=email,
+                          phone=phone, address=address, username=username, password=password)
+
+        # Create a session
         session = Session()
-        user = session.query(User).filter_by(username=username).first()
-        if user:
-            error = 'Username already exists'
-            return render_template('register.html', error=error)
 
-        # Check for password complexity (e.g., minimum length, special characters, etc.)
-        if len(password) < 8:
-            error = 'Password must be at least 8 characters long'
-            return render_template('register.html', error=error)
-
-        # Create a new User object
-        user = User(username=username, password=password, email=email)
-
-        # Save the user record to the database
-        session.add(user)
-        session.commit()
-        
         try:
-            # Save the user record to the database
-            session.add(user)
+            # Add the patient to the session
+            session.add(patient)
+            # Commit the changes to the database
             session.commit()
+            # Close the session
+            session.close()
+
+            # Flash a success message to the user
+            flash('Patient registration successful!', 'success')
+            return redirect(url_for('remote_doctor.login'))
+
         except Exception as e:
-            error = 'An error occurred during registration. Please try again later.'
-            return render_template('register.html', error=error)       
+            # Handle any exceptions that occurred during the registration process
+            # Rollback the session to revert any changes
+            session.rollback()
+            # Close the session
+            session.close()
 
-        # Redirect the user to a success page or login page
-        return redirect(url_for('remote_doctor.login'))
+            # Flash an error message to the user or handle the exception in a desired way
+            flash('An error occurred during patient registration. Please try again later.', 'error')
 
-    # If it's a GET request, render the registration form
-    return render_template('register.html')
+    return render_template('register_patient.html')
 
-@bp.route('/login', methods=['GET', 'POST'])
+
+@bp.route('/register/doctor', methods=['GET', 'POST'])
+def register_doctor():
+    if request.method == 'POST':
+        # Get the form data from the request
+        name = request.form['name']
+        specialty = request.form['specialty']
+        email = request.form['email']
+        phone = request.form['phone']
+        address = request.form['address']
+        username = request.form['username']
+        password = request.form['password']
+
+        # Create a new Doctor instance with the form data
+        doctor = Doctor(name=name, specialty=specialty, email=email,
+                        phone=phone, address=address, username=username, password=password)
+
+        # Create a session
+        session = Session()
+
+        try:
+            # Add the doctor to the session
+            session.add(doctor)
+            # Commit the changes to the database
+            session.commit()
+            # Close the session
+            session.close()
+
+            # Flash a success message to the user
+            flash('Doctor registration successful!', 'success')
+            return redirect(url_for('remote_doctor.login'))
+
+        except Exception as e:
+            # Handle any exceptions that occurred during the registration process
+            # Rollback the session to revert any changes
+            session.rollback()
+            # Close the session
+            session.close()
+
+            # Flash an error message to the user or handle the exception in a desired way
+            flash('An error occurred during doctor registration. Please try again later.', 'error')
+
+    return render_template('register_doctor.html')
+
+
+@bp.route('/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
@@ -69,7 +124,11 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.password == password:
             login_user(user)  # Login the user
-            return redirect(url_for('remote_doctor.get_doctors'))
+            return redirect(url_for('remote_doctor.main'))
+
+        # Invalid credentials or unsuccessful login attempt
+        flash('Invalid username or password', 'error')
+        return redirect(url_for('remote_doctor.login'))
 
     return render_template('login.html')
 
