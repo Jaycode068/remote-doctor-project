@@ -99,24 +99,60 @@
             font-size: 16px;
             cursor: pointer;
         }
+        
+        /* Move the About section slightly to the right */
+        #aboutSection {
+            margin-left: 30px; /* Adjust the margin value as per your preference */
+        }
+        /* Style the container */
+        .content-container {
+            max-width: 50%;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+
+        /* Style each heading */
+        h1, h2, p {
+            color: #333;
+            font-size: 24px;
+            font-family: Arial, sans-serif;
+            margin: 10px 0;
+        }
+        /* Style the paragraphs */
+        p {
+            color: #555;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+            margin: 10px 0;
+        }
+        .header-title {
+            font-size: 32px; /* Adjust the font size as needed */
+            color: white;
+        }
+
+
 
     </style>
 </head>
 <body>
     <div class="header">
         <div class="logo">
-            <img src="{{ url_for('static', filename='/remote-doctor-logo2.png') }}" alt="Remote Doctor Logo">
-
+            <a onclick="window.location.href = '/'">
+               <img src="{{ url_for('static', filename='/remote-doctor-logo2.png') }}" alt="Remote Doctor Logo">
+            </a>
+            <h1 class="header-title">REMOTE DOCTOR</h1>
         </div>
         <div class="menu">
-            <button>About</button>
+            <button onclick="showAboutSection()">About</button>
             <button>Contact</button>
             <button>Blog</button>
             <button onclick="location.href='login'">Log in</button>
         </div>
     </div>
 
-    <div class="container">
+    <div id="mainContent" class="container">
         <div class="text">
             <h1>TAKE CHARGE OF YOUR HEALTH, TALK TO A DOCTOR TODAY!.</h1>
             <p>Welcome to Remote Doctor! Take control of your health today by connecting with our expert doctors online. Whether you have a medical concern or need professional advice, we're here to assist you. With Remote Doctor, you can easily schedule appointments, access your health records, and receive prescriptions from the comfort of your home. Don't wait any longer – start your journey towards better health by signing up and exploring our comprehensive healthcare services.</p>
@@ -130,6 +166,56 @@
 
         </div> 
     </div>
+
+    <div id="aboutSection" class="centered" style="display: none;">
+        <div class="content-container">
+            <h2 style="color: #333; font-size: 28px; font-family: 'Arial', sans-serif;">About Remote Doctor</h2>
+            <p>
+                Welcome to Remote Doctor, an innovative telemedicine platform that brings healthcare services directly to your fingertips. Our mission is to make quality healthcare accessible and convenient for everyone, regardless of their location.
+            </p>
+            <h3 style="color: #555; font-size: 24px; font-family: 'Arial', sans-serif;">How It Works</h3>
+
+            <p>
+                Remote Doctor connects patients with licensed doctors through secure video consultations. By leveraging modern technology, we eliminate the need for in-person visits, long wait times, and travel hassles. With just a few clicks, you can have a virtual appointment with a healthcare professional from the comfort of your own home.
+            </p>
+            <h3 style="color: #555; font-size: 24px; font-family: 'Arial', sans-serif;">Key Features</h3>
+            <ul>
+                <li>Convenient Access: Easily book appointments and connect with doctors at a time that suits you best.</li>
+                <li>Secure Communication: Enjoy a confidential and secure video consultation platform to discuss your healthcare needs.</li>
+                <li>Qualified Professionals: Our network includes experienced and certified doctors from various specialties.</li>
+                <li>Prescriptions and Referrals: Receive electronic prescriptions and referrals if needed, which can be conveniently accessed from your account.</li>
+                <li>Medical Records Management: Access and manage your medical records securely within the platform.</li>
+            </ul>
+            <h3 style="color: #555; font-size: 24px; font-family: 'Arial', sans-serif;">Our Commitment</h3>
+            <p>
+                At Remote Doctor, we prioritize your well-being and strive to deliver exceptional healthcare services. We adhere to strict privacy and security protocols to protect your personal information. Our team is dedicated to providing compassionate care and addressing your healthcare concerns effectively.
+            </p>
+            <h3 style="color: #555; font-size: 24px; font-family: 'Arial', sans-serif;">Get Started Today</h3>
+            <p>
+                Take control of your healthcare journey with Remote Doctor. Sign up now to experience the convenience, accessibility, and quality of our telemedicine services.
+            </p>
+            
+            </div>
+                    <button class="close-button" onclick="goToHomePage()">Close</button>
+        </div>
+        
+    </div>
+
+    <script>
+        function showAboutSection() {
+            document.getElementById("aboutSection").style.display = "block";
+            document.getElementById("mainContent").style.display = "none";
+        }
+
+        function hideAboutSection() {
+            document.getElementById("aboutSection").style.display = "none";
+            document.getElementById("mainContent").style.display = "block";
+        }
+
+        function goToHomePage() {
+            window.location.href = "/"; // Replace "/" with the URL of your home page
+        }
+    </script>
 </body>
 </html>
 

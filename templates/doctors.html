@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .title {
+            display: none;
+        }
+    
+    <!-- Add your CSS and JS files here -->
+    
+        .main-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .doctor-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .doctor {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: calc(25% - 20px); /* Adjust the width based on the number of boxes per line */
+            text-align: center;
+        }
+        .status {
+            font-weight: bold;
+        }
+
+        .online {
+            color: green;
+        }
+
+        .offline {
+            color: red;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <div class="doctor-list">
+            {% for doctor in doctors %}
+                <div class="doctor">
+                    <p>Name: {{ doctor.name }}</p>
+                    <p>Specialty: {{ doctor.specialty }}</p>
+                    <p>Email: {{ doctor.email }}</p>
+                    <p>Phone: {{ doctor.phone }}</p>
+                    <p>Address: {{ doctor.address }}</p>
+                    <p>Status: <span class="status {% if doctor.username == logged_in_username %}online{% else %}offline{% endif %}">
+    {% if doctor.username == logged_in_username %}Online{% else %}Offline{% endif %}
+</span></p>
+
+                    </p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+

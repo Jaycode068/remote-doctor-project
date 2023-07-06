@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Remote Doctor Application</title>
+    <style>
+        body {
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .sidebar {
+            background-color: #2ecc71;
+            color: #fff;
+            width: 200px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 80px;
+        }
+
+        .sidebar a {
+            color: #fff;
+            text-decoration: none;
+            margin-bottom: 10px;
+            padding: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+         .sidebar a:hover {
+            background-color: #27ae60; /* Change background color on hover */
+        }
+
+        .header {
+            background-color: #fff;
+            color: #1e824c;
+            padding: 10px;
+            text-align: center;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            flex-grow: 1; /* Allow the text to take up remaining space */
+            text-align: center;
+        }
+
+         .header-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1; /* Allow the content to take up remaining space */
+        }
+
+        .header-content h1 {
+            margin: 0;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .header-buttons {
+            display: flex;
+            align-items: center;
+
+         }
+
+        .header-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-buttons button {
+            background-color: #1e824c;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .patient-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: 0 auto;
+            max-width: 800px; /* Adjust the width as per your preference */
+        }
+
+
+        .footer {
+            background-color: #1e824c;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+	    document.addEventListener('DOMContentLoaded', () => {
+		const sidebarButtons = document.getElementsByClassName('sidebar-button');
+		const mainContent = document.querySelector('.main-content');
+		const dashboardButton = document.getElementById('dashboard-tab');
+		const doctorsButton = document.getElementById('doctors-tab');
+		const patientInfo = document.getElementById('patient-info');
+		const doctorsInfo = document.getElementById('doctors-info');
+		const logoutButton = document.getElementById('logout-button');
+
+		$(document).ready(function() {
+		    // Hide all sidebar content sections initially
+		    $('.sidebar-content').hide();
+
+		    // Handle click events on sidebar buttons
+		    $('.sidebar a').click(function() {
+			// Hide all sidebar content sections
+			$('.sidebar-content').hide();
+
+			// Show the corresponding content section based on the clicked button
+			var contentId = $(this).attr('id') + '-content';
+			$('#' + contentId).show();
+		    });
+
+		    // Show appointment form when "Schedule an Appointment" button is clicked
+		    $('#schedule-appointment-button').click(function() {
+			$('#appointment-buttons').hide();
+			$('#appointment-form').show();
+			fetchDoctors();
+		    });
+
+		    // Show appointment history when "Appointment History" button is clicked
+		    $('#appointment-history-button').click(function() {
+			$('#appointment-buttons').hide();
+			$('#appointment-history').show();
+			fetchAppointmentHistory();
+		    });
+
+		    // Fetch doctors and populate the appointment form select options
+		    function fetchDoctors() {
+			$.get('/doctors', function(data) {
+			    var doctorSelect = $('#appointment-doctor');
+			    doctorSelect.empty();
+			    $.each(data, function(index, doctor) {
+				var option = $('<option>', { value: doctor.id, text: doctor.name });
+				doctorSelect.append(option);
+			    });
+			});
+		    }
+
+		    // Fetch appointment history and display it
+		    function fetchAppointmentHistory() {
+			$.get('/appointment_history', function(data) {
+			    var appointmentList = $('#appointment-history-list');
+			    appointmentList.empty();
+			    if (data.length === 0) {
+				appointmentList.append('<p>No appointments found.</p>');
+			    } else {
+				$.each(data, function(index, appointment) {
+				    var listItem = $('<div>').text(appointment.date + ' - ' + appointment.doctor);
+				    appointmentList.append(listItem);
+				});
+			    }
+			});
+		    }
+
+		    // Handle form submission
+		    $('#appointment-form-fields').submit(function(e) {
+			e.preventDefault();
+
+			var appointmentDate = $('#appointment-date').val();
+			var appointmentNotes = $('#appointment-notes').val();
+			var appointmentDoctor = $('#appointment-doctor option:selected').text();
+
+			// Store appointment details in the database
+			var data = {
+			    date: appointmentDate,
+			    notes: appointmentNotes,
+			    doctor: appointmentDoctor
+			};
+
+			$.post('/schedule_appointment', data, function(response) {
+			    console.log(response);
+			    // Reset the form
+			    $('#appointment-form-fields')[0].reset();
+
+			    // Hide the appointment form and show the appointment buttons again
+			    $('#appointment-form').hide();
+			    $('#appointment-buttons').show();
+			});
+		    });
+
+		    logoutButton.addEventListener('click', () => {
+			fetch('/logout', { method: 'POST' })
+			    .then(response => {
+				if (response.ok) {
+				    // Redirect to the login page or perform other actions
+				    window.location.href = '/login';
+				} else {
+				    console.log('Logout failed');
+				}
+			    })
+			    .catch(error => {
+				console.log(error);
+			    });
+		    });
+
+		    function logout() {
+			window.location.href = document.querySelector('#logout-button a').href;
+		    }
+
+		    dashboardButton.addEventListener('click', () => {
+			fetch('/patient') // Replace with the correct route to fetch patient data
+			    .then(response => response.json())
+			    .then(data => {
+				const loggedInUsername = '{{ current_user.username }}';
+				const html = `<h2>Hello, ${loggedInUsername}!</h2>`;
+				patientInfo.innerHTML = html;
+			    })
+			    .catch(error => {
+				console.log(error);
+			    });
+			mainContent.classList.add('active');
+		    });
+
+		    doctorsButton.addEventListener('click', function () {
+			fetch('{{ url_for('remote_doctor.doctors') }}')
+			    .then(response => response.text())
+			    .then(data => {
+				document.getElementById('doctor-list').innerHTML = data;
+			    })
+			    .catch(error => {
+				console.log(error);
+			    });
+
+			mainContent.classList.add('active');
+		    });
+		});
+	    });
+    </script>
+</head>
+<body>
+    <div class="sidebar">
+        <a id="dashboard-tab" href="#">Dashboard</a>
+        <a href="#" id="doctors-tab">Doctors</a>
+        <a id="appointments-tab" href="#">Appointments</a>
+        <a href="#" id="medical-record">Medical Records</a>
+        <a id="profile-settings" href="#">Profile Settings</a>
+        <a href="{{ url_for('remote_doctor.logout') }}">Logout</a>
+    </div>
+
+    <div class="header">
+        <div class="header-content">
+            <h1>WELCOME TO REMOTE DOCTOR</h1>
+            <div class="header-buttons">
+                <button id="notification-button">Notification</button>
+                <button id="logout-button" onclick="logout()"><a href="{{ url_for('remote_doctor.logout') }}">Logout</a></button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="main-content">
+        <h2>Doctors</h2>
+        <div id="doctor-list"></div>
+
+        <h2>Appointments</h2>
+        <div id="appointment-buttons">
+            <button id="schedule-appointment-button">Schedule an Appointment</button>
+            <button id="appointment-history-button">Appointment History</button>
+        </div>
+
+        <div id="appointment-form" style="display: none;">
+            <h3>Schedule an Appointment</h3>
+            <form id="appointment-form-fields">
+                <label for="appointment-date">Date:</label>
+                <input type="date" id="appointment-date" name="date" required>
+
+                <label for="appointment-notes">Notes:</label>
+                <textarea id="appointment-notes" name="notes" rows="4" required></textarea>
+
+                <label for="appointment-doctor">Doctor:</label>
+                <select id="appointment-doctor" name="doctor" required></select>
+
+                <button type="submit">Schedule Appointment</button>
+            </form>
+        </div>
+
+        <div id="appointment-history" style="display: none;">
+            <h3>Appointment History</h3>
+            <div id="appointment-history-list"></div>
+        </div>
+    </div>
+
+
+       <!-- Main Content Here -->
+       <div id="patient-info" class="patient-info"></div>
+    </div>
+
+    <div class="footer">
+        <p>All rights reserved</p>
+    </div>
+
+
+</body>
+</html>
+

@@ -2,6 +2,8 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.orm import declarative_base
 from flask_login import UserMixin
+#from werkzeug.security import generate_password_hash, check_password_hash
+
 
 
 # Create the engine and session
@@ -11,38 +13,6 @@ Session = sessionmaker(bind=engine)
 # Create the base class for models
 Base = declarative_base()
 
-class User(Base, UserMixin):
-    __tablename__ = 'users'
-
-    id = Column(Integer, primary_key=True)
-    username = Column(String(50), unique=True, nullable=False)
-    password = Column(String(100), nullable=False)
-    email = Column(String(100), unique=True, nullable=False)
-    role = Column(String(50))  # Add the role column
-
-    def get_id(self):
-        return str(self.id)
-
-    @property
-    def is_authenticated(self):
-        return True  # Assuming all users are authenticated
-
-    @property
-    def is_active(self):
-        return True  # Assuming all users are active
-
-    @property
-    def is_anonymous(self):
-        return False
-
-    def __init__(self, username, password, email, role=None):
-        self.username = username
-        self.password = password
-        self.email = email
-        self.role = role
-
-    def __repr__(self):
-        return f"User(id={self.id}, username={self.username}, email={self.email})"
 
 class Doctor(Base):
     __tablename__ = 'doctors'
@@ -56,6 +26,17 @@ class Doctor(Base):
     username = Column(String(50))
     password = Column(String(100))
 
+    def is_authenticated(self):
+        # Implement the logic to determine if the doctor is authenticated
+        return True  # or False based on your criteria
+
+    def get_id(self):
+        return str(self.id)
+
+    def is_active(self):
+        # Implement the logic to determine if the doctor is active
+        return True  # or False based on your criteria    
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -67,8 +48,15 @@ class Doctor(Base):
             'username': self.username
         }
 
-    def __init__(self, id, name, specialty, email, phone, address, username, password):
-        self.id = id
+    @staticmethod
+    def get_by_username(username):
+        return Session().query(Doctor).filter_by(username=username).first()
+
+    def check_password(self, password):
+        # You might need to adjust this based on how passwords are stored and checked in your system
+        return self.password == password
+  
+    def __init__(self, name, specialty, email, phone, address, username, password):
         self.name = name
         self.specialty = specialty
         self.email = email
@@ -84,6 +72,8 @@ class Doctor(Base):
         )
 
 
+# ...
+
 class Patient(Base, UserMixin):
     __tablename__ = 'patients'
 
@@ -97,17 +87,23 @@ class Patient(Base, UserMixin):
     username = Column(String(50))
     password = Column(String(100))
 
+    def is_authenticated(self):
+        # Implement the logic to determine if the patient is authenticated
+        return True  # or False based on your criteria
+
+    def get_id(self):
+        return str(self.id)
+   
     def is_active(self):
         # Implement the logic to determine if the patient is active
         return True  # or False based on your criteria
-    
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
             'age': self.age,
-	    'gender': self.gender,
+            'gender': self.gender,
             'email': self.email,
             'phone': self.phone,
             'address': self.address,
@@ -116,8 +112,15 @@ class Patient(Base, UserMixin):
 
     @staticmethod
     def get_by_username(username):
-        return Session().query(Patient).filter_by(username=username).first()
-
+        session = Session()
+        patient = session.query(Patient).filter_by(username=username).first()
+        session.close()
+        return patient
+    
+    def check_password(self, password):
+        # You might need to adjust this based on how passwords are stored and checked in your system
+        return self.password == password
+    
     def __init__(self, name, age, gender, email, phone, address, username, password):
         self.name = name
         self.age = age
@@ -127,9 +130,14 @@ class Patient(Base, UserMixin):
         self.address = address
         self.username = username
         self.password = password
-
+        
     def __repr__(self):
-        return f"Patient(id={self.id}, name={self.name}, age={self.age}, gender={self.gender}, email={self.email}, phone={self.phone}, address={self.address})"
+        return (
+            f"Patient(id={self.id}, name={self.name}, age={self.age}, "
+            f"gender={self.gender}, email={self.email}, phone={self.phone}, "
+            f"address={self.address})"
+        )
+
 
 
 class Appointment(Base):
@@ -141,6 +149,7 @@ class Appointment(Base):
     doctor_id = Column(Integer, ForeignKey('doctors.id'))
     doctor = relationship('Doctor')
     date = Column(String(20))
+    notes = Column(String(200)) 
 
     def to_dict(self):
         return {
@@ -148,15 +157,17 @@ class Appointment(Base):
             'patient_id': self.patient_id,
             'doctor_id': self.doctor_id,
             'date': self.date,
+            'notes': self.note
         }
 
     def __init__(self, patient, doctor, date):
         self.patient = patient
         self.doctor = doctor
         self.date = date
+        self.notes = notes
 
     def __repr__(self):
-        return f"Appointment(id={self.id}, patient={self.patient}, doctor={self.doctor}, date={self.date})"
+        return f"Appointment(id={self.id}, patient={self.patient}, doctor={self.doctor}, date={self.date}, notes={self.notes})"
 
 
 class MedicalRecord(Base):

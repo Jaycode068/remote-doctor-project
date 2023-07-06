@@ -71,7 +71,8 @@
         .header-buttons {
             display: flex;
             align-items: center;
-        }
+
+         }
 
         .header-buttons button {
             background-color: #1e824c;
@@ -81,7 +82,7 @@
             margin-left: 10px;
             cursor: pointer;
         }
-       
+
         .patient-info {
             display: flex;
             flex-direction: column;
@@ -103,7 +104,251 @@
             left: 0;
             width: 100%;
         }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .button-container button {
+            margin: 0 10px;
+        }
+        #appointment-form,
+        #appointment-history {
+            display: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+       
+        #appointment-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        #appointment-form-fields {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #appointment-form-fields label,
+        #appointment-form-fields input,
+        #appointment-form-fields textarea,
+        #appointment-form-fields select {
+            margin-bottom: 10px;
+        }
+
+        #appointment-form-fields button {
+            margin-top: 10px;
+        }
+
+        /* Add a class to indicate the active sidebar button */
+        .sidebar a.active {
+        background-color: #006400;
+        
+        }
+
+        /* Hide the content of inactive buttons */
+        .sidebar-content:not(.active) {
+            display: none;
+       
+        }
+
+        .sidebar-content {
+            display: none;
+        }
+
+        .sidebar-content.active {
+            display: block;
+        }
+
+
+
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const sidebarButtons = document.getElementsByClassName('sidebar-button');
+            const mainContent = document.querySelector('.main-content');
+            const dashboardButton = document.getElementById('dashboard-tab');
+            const doctorsButton = document.getElementById('doctors-tab');
+            const patientInfo = document.getElementById('patient-info');
+            const doctorsInfo = document.getElementById('doctors-info');
+            const logoutButton = document.getElementById('logout-button');
+    
+            // Hide all sidebar content sections initially
+            $('.sidebar-content').hide();
+    
+            // Handle click events on sidebar buttons
+            $('.sidebar a').click(function() {
+                // Remove the "active" class from all sidebar buttons
+                $('.sidebar a').removeClass('active');
+
+                // Hide all sidebar content sections
+                $('.sidebar-content').removeClass('active');
+                
+    
+                // Show the corresponding content section based on the clicked button
+                var contentId = $(this).attr('id') + '-content';
+                $('#' + contentId).show();
+
+                // Add the "active" class to the clicked sidebar button
+                $(this).addClass('active');
+
+                // Hide the content of other buttons
+                $('.sidebar-content').not('.active').hide();
+                
+                // Show the appointment buttons if the "Appointments" button is clicked
+                if ($(this).attr('id') === 'appointments-tab') {
+                    $('.button-container').removeClass('hidden');
+                } else {
+                    $('.button-container').addClass('hidden');
+                }
+                 
+            });
+
+            // Show appointment form when "Schedule an Appointment" button is clicked
+            $('#schedule-appointment-button').click(function() {
+                $('#appointment-buttons').hide();
+                $('#appointment-form').show();
+                fetchDoctors();
+            });
+
+            // Fetch doctors and populate the appointment form select options
+            function fetchDoctors() {
+                $.get('/doctors-json', function(data) {
+                    var doctorSelect = $('#appointment-doctor');
+                    doctorSelect.empty();
+                    doctorSelect.append('<option value="">Select a doctor</option>');
+                    $.each(data, function(index, doctor) {
+                        var option = $('<option>', { value: doctor.id, text: doctor.name });
+                        doctorSelect.append(option);
+                    });
+                });
+            }
+    
+            // Fetch appointment history and display it
+            function fetchAppointmentHistory() {
+                $.get('/appointment_history', function(data) {
+                    var appointmentList = $('#appointment-history-list');
+                    appointmentList.empty();
+                    if (data.length === 0) {
+                        appointmentList.append('<p>No appointments found.</p>');
+                    } else {
+                        $.each(data, function(index, appointment) {
+                            var listItem = $('<div>').text(appointment.date + ' - ' + appointment.doctor);
+                            appointmentList.append(listItem);
+                        });
+                    }
+                });
+            }
+    
+            // Handle form submission
+            $('#appointment-form-fields').submit(function(e) {
+                e.preventDefault();
+    
+                var appointmentDate = $('#appointment-date').val();
+                var appointmentNotes = $('#appointment-notes').val();
+                var appointmentDoctor = $('#appointment-doctor option:selected').text();
+    
+                // Store appointment details in the database
+                var data = {
+                    date: appointmentDate,
+                    notes: appointmentNotes,
+                    doctor: appointmentDoctor
+                };
+    
+                $.post('/appointments', data, function(response) {
+                    console.log(response);
+                    // Reset the form
+                    $('#appointment-form-fields')[0].reset();
+    
+                    // Hide the appointment form and show the appointment buttons again
+                    $('#appointment-form').hide();
+                    $('#appointment-buttons').show();
+                });
+            });
+    
+            logoutButton.addEventListener('click', () => {
+                fetch('/logout', { method: 'POST' })
+                    .then(response => {
+                        if (response.ok) {
+                            // Redirect to the login page or perform other actions
+                            window.location.href = '/login';
+                        } else {
+                            console.log('Logout failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+            });
+    
+            // Hide the appointment buttons initially
+            $('.button-container').addClass('hidden');
+    
+            dashboardButton.addEventListener('click', () => {
+                fetch('/patient') // Replace with the correct route to fetch patient data
+                    .then(response => response.json())
+                    .then(data => {
+                        const loggedInUsername = '{{ current_user.username }}';
+                        const html = `<h2>Hello, ${loggedInUsername}!</h2>`;
+                        patientInfo.innerHTML = html;
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+    
+                mainContent.classList.add('active');
+            });
+
+            doctorsButton.addEventListener('click', function () {
+                fetch('{{ url_for('remote_doctor.doctors') }}')
+                    .then(response => response.text())
+                    .then(data => {
+                        document.getElementById('doctor-list').innerHTML = data;
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+    
+                mainContent.classList.add('active');
+            });
+
+            // Fetch and display the profile details
+            function fetchProfileDetails() {
+                $.get('/profile', function(data) {
+                    var profileContent = $('#profile-content');
+                    profileContent.empty();
+
+                    // Construct the profile details HTML
+                    var html = '<h3>Profile Settings</h3>';
+                    html += '<table>';
+                    html += '<tr><td>Name:</td><td>' + data.name + '</td></tr>';
+                    html += '<tr><td>Age:</td><td>' + data.age + '</td></tr>';
+                    html += '<tr><td>Gender:</td><td>' + data.gender + '</td></tr>';
+                    html += '<tr><td>Email:</td><td>' + data.email + '</td></tr>';
+                    html += '<tr><td>Phone:</td><td>' + data.phone + '</td></tr>';
+                    html += '<tr><td>Address:</td><td>' + data.address + '</td></tr>';
+                    html += '<tr><td>Username:</td><td>' + data.username + '</td></tr>';
+                    html += '</table>';
+
+                    profileContent.html(html);
+                });
+            }
+            
+        });
+    </script>
+    
+    
+    
 </head>
 <body>
     <div class="sidebar">
@@ -123,88 +368,54 @@
                 <button id="logout-button" onclick="logout()"><a href="{{ url_for('remote_doctor.logout') }}">Logout</a></button>
             </div>
         </div>
-
     </div>
 
     <div class="main-content">
-       <!-- Main Content Here -->
-       <div id="patient-info" class="patient-info"></div>
+           <h2>Doctors</h2>
+           <div id="doctor-list"></div>
+            
+    
+            <h2>Appointments</h2>
+            <div class="button-container" id="appointment-buttons">
+                   <button id="schedule-appointment-button">Schedule an Appointment</button>
+                   <button id="appointment-history-button">Appointment History</button>
+            </div>
+
+            <div id="appointment-form" style="display: none;">
+                 <h3>Schedule an Appointment</h3>
+                 <form id="appointment-form-fields">
+                     <div>
+                         <label for="appointment-date">Date:</label>
+                         <input type="date" id="appointment-date" name="date" required>
+                    </div>
+
+                    <div>
+                         <label for="appointment-doctor">Doctor:</label>
+                         <select id="appointment-doctor" name="doctor" required>
+                            <option value="">Select a doctor</option>
+                         </select>
+                    </div>
+
+                    <div>
+                         <label for="appointment-notes">Notes:</label>
+                         <textarea id="appointment-notes" name="notes" rows="4" required></textarea>
+                    </div>
+
+                    <div>
+                         <button type="submit">Schedule Appointment</button>
+                    </div>
+                 </form>
+            </div>
+        </div>
+            <!-- Main Content Here -->
+            <div id="patient-info" class="patient-info"></div>
+       
+    
+
+        <div class="footer">
+           <p>All rights reserved</p>
+        </div>
     </div>
-
-    <div class="footer">
-        <p>All rights reserved</p>
-    </div>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const dashboardButton = document.getElementById('dashboard-tab');
-        const doctorsButton = document.getElementById('doctors-tab');
-        const mainContent = document.querySelector('.main-content');
-        const patientInfo = document.getElementById('patient-info');
-        const doctorsInfo = document.getElementById('doctors-info');
-        const logoutButton = document.getElementById('logout-button');
-
-
-        logoutButton.addEventListener('click', () => {
-            fetch('/logout', { method: 'POST' })
-                .then(response => {
-                    if (response.ok) {
-                        // Redirect to the login page or perform other actions
-                        window.location.href = '/login';
-                    } else {
-                        console.log('Logout failed');
-                    }
-                })
-                .catch(error => {
-                    console.log(error);
-                });
-        });
-
-        function logout() {
-            window.location.href = document.querySelector('#logout-button a').href;
-}
-
-        dashboardButton.addEventListener('click', () => {
-            fetch('/patient') // Replace with the correct route to fetch patient data
-                .then(response => response.json())
-                .then(data => {
-                    const loggedInUsername = '{{ current_user.username }}';
-                    const html = `<h2>Hello, ${loggedInUsername}!</h2>`;
-                    patientInfo.innerHTML = html;
-                })
-                .catch(error => {
-                    console.log(error);
-                });
-
-            mainContent.classList.add('active');
-        });
-        doctorsButton.addEventListener('click', () => {
-            fetch('/doctors')
-                .then(response => response.json())
-                .then(data => {
-                    const doctors = data;
-                    let html = '';
-                    doctors.forEach(doctor => {
-                        const status = doctor.is_online ? 'Online' : 'Offline';
-                        html += '<div class="doctor">';
-                        html += `<p>ID: ${doctor.id}</p>`;
-                        html += `<p>Name: ${doctor.name}</p>`;
-                        html += `<p>Status: ${status}</p>`;
-                        html += '</div>';
-                    });
-                    doctorsInfo.innerHTML = html;
-                })
-                .catch(error => {
-                    console.log(error);
-                });
-
-            mainContent.classList.add('active');
-        });
-
-      });  
- 
-    </script>
-
-
 
 </body>
 </html>
