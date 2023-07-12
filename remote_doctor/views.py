@@ -1,16 +1,19 @@
 from flask import Blueprint, jsonify, request, render_template, url_for, redirect, flash
-from remote_doctor.models import Doctor, Patient, Appointment, MedicalRecord
+from remote_doctor.models import Doctor, Patient, Appointment, MedicalRecord, User
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload
 from flask_login import login_user, logout_user, current_user, login_required
 from functools import wraps
 from flask import abort
+
+
 # from werkzeug.security import check_password_hash
 
 
 
 engine = create_engine("mysql+mysqlconnector://johnson:Ibelieve1!@localhost:3306/remote_doctor")
 Session = sessionmaker(bind=engine)
+
 
 bp = Blueprint('remote_doctor', __name__)
 
@@ -25,172 +28,199 @@ def main():
     # Add the logic to retrieve data for the main page and render the template
     return render_template('main.html')
 
+@bp.route('/doctors')
+@login_required  # Require login to access the doctors dashboard page
+def doctors():
+    # Add the logic to retrieve data for doctors page and render the template
+    return render_template('doctor_dashboard.html')
 
-@bp.route('/register/patient', methods=['GET', 'POST'])
-def register_patient():
+
+@bp.route('/register', methods=['GET', 'POST'])
+def register():
     if request.method == 'POST':
-        # Get the form data from the request
+        # Get the form data
         name = request.form['name']
-        age = int(request.form['age'])
-        gender = request.form['gender']
         email = request.form['email']
         phone = request.form['phone']
         address = request.form['address']
         username = request.form['username']
         password = request.form['password']
-
-        # Create a new Patient instance with the form data
-        patient = Patient(name=name, age=age, gender=gender, email=email,
-                          phone=phone, address=address, username=username, password=password)
-
-        # Create a session
+        role = request.form['role']
+    
+        # Create a new session
         session = Session()
-
-        try:
+    
+        if role == 'patient':
+            # Additional fields for patient registration
+            age = request.form['age']
+            gender = request.form['gender']
+    
+            # Create a new Patient object
+            patient = Patient(name=name, email=email, phone=phone, address=address, username=username, password=password, age=age, gender=gender)
+    
             # Add the patient to the session
             session.add(patient)
-            print("Patient added to the session")
-
-            # Commit the changes to the database
-            session.commit()
-            print("Changes committed to the database")
-
-            # Flash a success message to the user
-            flash('Patient registration successful!', 'success')
-
-            print("Redirecting to login page")
-            return redirect(url_for('remote_doctor.login'))
-
-        except Exception as e:
-            # Handle any exceptions that occurred during the registration process
-            # Rollback the session to revert any changes
-            session.rollback()
-            print("Exception occurred during patient registration:", str(e))
-
-            # Flash an error message to the user or handle the exception in a desired way
-            flash('An error occurred during patient registration. Please try again later.', 'error')
-        
-        finally:
-            #Close the session
-            session.close()
-
-
-    return render_template('register_patient.html')
-
-
-@bp.route('/register/doctor', methods=['GET', 'POST'])
-def register_doctor():
-    if request.method == 'POST':
-        # Get the form data from the request
-        name = request.form['name']
-        specialty = request.form['specialty']
-        email = request.form['email']
-        phone = request.form['phone']
-        address = request.form['address']
-        username = request.form['username']
-        password = request.form['password']
-
-        # Create a new Doctor instance with the form data
-        doctor = Doctor(name=name, specialty=specialty, email=email,
-                        phone=phone, address=address, username=username, password=password)
-
-        # Create a session
-        session = Session()
-
-        try:
+    
+        elif role == 'doctor':
+            # Additional fields for doctor registration
+            specialty = request.form['specialty']
+    
+            # Create a new Doctor object
+            doctor = Doctor(name=name, email=email, phone=phone, address=address, username=username, password=password, specialty=specialty)
+    
             # Add the doctor to the session
             session.add(doctor)
-            # Commit the changes to the database
-            session.commit()
-            # Close the session
-            session.close()
+    
+        # Create a new User object
+        user = User(name=name, email=email, phone=phone, address=address, username=username, password=password, role=role)
+    
+        # Add the user to the session
+        session.add(user)
+    
+        # Commit the changes to the database
+        session.commit()
+        session.close()
+    
+        return redirect(url_for('remote_doctor.login'))
 
-            # Flash a success message to the user
-            flash('Doctor registration successful!', 'success')
-            return redirect(url_for('remote_doctor.login'))
+    return render_template('register.html')
 
-        except Exception as e:
-            # Handle any exceptions that occurred during the registration process
-            # Rollback the session to revert any changes
-            session.rollback()
-            # Close the session
-            session.close()
-
-            # Flash an error message to the user or handle the exception in a desired way
-            flash('An error occurred during doctor registration. Please try again later.', 'error')
-
-    return render_template('register_doctor.html')
-
-
+# Login route
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+
+    session = Session()
+
+    if current_user.is_authenticated:
+        # User is already logged in, redirect to home page or appropriate route
+        if current_user.role == 'patient':
+            return redirect(url_for('remote_doctor.main'))
+        elif current_user.role == 'doctor':
+            return redirect(url_for('remote_doctor.doctors'))
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-
-        # Implement the logic to authenticate the patient
-        print(f"Attempting patient login with username: {username}")
         
+        # Find the user by username in the User table
+        user = session.query(User).filter_by(username=username).first()
 
-        patient = Patient.get_by_username(username)
-        print("Patient found. Checking password...")
-        # print(f"Stored password: {patient.password}")
-        print(f"Entered password: {password}")
-        if patient and patient.check_password(password):
-            login_user(patient)  # Login the patient
-            return redirect(url_for('remote_doctor.main'))
-            
-        # Check if the user is a doctor
-        print("Patient login failed. Checking doctor credentials...")
-        doctor = Doctor.get_by_username(username)
-        if doctor and doctor.check_password(password):
-            print("Doctor login successful. Logging in...")
-            login_user(doctor)  # Login the doctor
-            return redirect(url_for('remote_doctor.main'))
+        if user and user.check_password(password):
+            # User found and password is correct
+            # Log in the user
+            login_user(user)
 
-        # Invalid credentials or unsuccessful login attempt
-        print("Invalid username or password")
-        flash('Invalid username or password', 'error')
-        return redirect(url_for('remote_doctor.login'))
+            # Redirect to the appropriate page based on the user's role
+            if user.role == 'patient':
+                return redirect(url_for('remote_doctor.main'))
+            elif user.role == 'doctor':
+                # Call the handle_doctor_login function with the logged-in doctor's username
+                handle_doctor_login(user.username)
 
-    return render_template('login.html')
+                return redirect(url_for('remote_doctor.doctors'))
 
-    
+        # Login failed, show an error message
+        error_message = 'Invalid username or password'
+        return render_template('login.html', error_message=error_message)
+
+    # GET request, render the login form
+    return render_template('login.html')    
 
 @bp.route('/logout')
 @login_required
 def logout():
+    # Call the handle_doctor_logout function with the logged-out doctor's username
+    handle_doctor_logout(current_user.username)
+    
     logout_user()
     flash('You have been logged out.', 'success')
     return redirect(url_for('remote_doctor.login'))
 
-@bp.route('/doctors', methods=['GET'], endpoint='doctors')
+# Initialize the online_status dictionary
+online_status = {}
+
+@bp.route('/doctors-json')
+def get_doctors_json():
+    session = Session()
+    doctors = session.query(Doctor).all()
+    session.close()
+
+    serialized_doctors = []
+    for doctor in doctors:
+        serialized_doctors.append({
+            'id': doctor.id,
+            'name': doctor.name,
+            'specialty': doctor.specialty,
+            'email': doctor.email,
+            'phone': doctor.phone,
+            'address': doctor.address
+        })
+
+    return jsonify({
+        'doctors': serialized_doctors,
+        'online_status': online_status
+    })
+
+# Whenever a doctor logs in
+def handle_doctor_login(doctor_username):
+    global online_status  # Add this line to access the global online_status dictionary
+    online_status[doctor_username] = True
+
+# Whenever a doctor logs out or disconnects
+def handle_doctor_logout(doctor_username):
+    global online_status  # Add this line to access the global online_status dictionary
+    online_status[doctor_username] = False
+
+
+@bp.route('/doctor', methods=['GET'], endpoint='doctor')
 def get_doctors():
     session = Session()
     doctors = session.query(Doctor).all()
     session.close()
 
     logged_in_username = current_user.username if current_user else None
-    return render_template('doctors.html', doctors=doctors, logged_in_username=logged_in_username)
+    return render_template('doctors.html', doctors=doctors, online_status=online_status, logged_in_username=logged_in_username)
 
-@bp.route('/doctors-json', methods=['GET'], endpoint='doctors_json')
-def get_doctors_json():
+@bp.route('/doctor_username', methods=['GET'])
+@login_required
+def get_current_doctor():
+    return jsonify(username=current_user.username)
+
+@bp.route('/update_profile', methods=['POST'])
+@login_required
+def update_profile():
     session = Session()
-    doctors = session.query(Doctor).all()
-    session.close()
+    data = request.form
 
-    doctors_data = [{'id': doctor.id, 'name': doctor.name} for doctor in doctors]
+    # Retrieve the current user
+    
+    current_user = session.query(User).filter_by(username=current_user.username).first()
+    print('Current User:', current_user)  # Print the current user for debugging purposes
+    if not current_user:
+        return jsonify(error='User not found'), 404
 
-    return jsonify(doctors_data)
+    # Update the user's profile with the form data
+    current_user.name = data.get('name')
+    current_user.email = data.get('email')
+    current_user.phone = data.get('phone')
+    current_user.address = data.get('address')
+
+    try:
+        session.commit()
+        session.close()
+        print('Profile updated successfully')
+        return jsonify(message='Profile updated successfully')
+    except Exception as e:
+        session.rollback()
+        session.close()
+        print('Error updating profile:', e)
+        return jsonify(error=str(e)), 500
 
 
-@bp.route('/doctors', methods=['POST'])
-def render_doctors():
-    session = Session()
-    doctors = session.query(Doctor).all()
-    session.close()
-    return jsonify([doctor.to_dict() for doctor in doctors])
 
+
+
+"""
 @bp.route('/doctors/<int:doctor_id>', methods=['GET'])
 def get_doctor(doctor_id):
     session = Session()
@@ -227,11 +257,12 @@ def delete_doctor(doctor_id):
     session.commit()
     session.close()
     return '', 204
-
+"""
 
 #Defining end-points to perform CRUD for patients
 
-@bp.route('/patient', methods=['GET'])
+
+@bp.route('/patient_username', methods=['GET'])
 @login_required
 def get_current_patient():
     return jsonify(username=current_user.username)
@@ -321,13 +352,32 @@ def get_appointments():
 
 @bp.route('/appointments', methods=['POST'])
 def create_appointment():
-    session = Session()
-    data = request.json
-    appointment = Appointment(**data)
-    session.add(appointment)
-    session.commit()
-    session.close()
-    return jsonify(appointment.to_dict()), 201
+    if request.headers['Content-Type'] == 'application/json':
+        session = Session()
+        data = request.json
+        patient_id = data['patient_id']
+        doctor_id = data['doctor_id']
+        
+        
+
+        patient = session.query(Patient).get(patient_id)
+        doctor = session.query(Doctor).get(doctor_id)
+        
+        if not patient or not doctor:
+            session.close()
+            return jsonify({'error': 'Invalid patient or doctor ID'}), 400
+        
+        appointment = Appointment(patient=patient, doctor=doctor, date=data['date'], notes=data['notes'])
+        session.add(appointment)
+        session.commit()
+        
+        appointment_data = appointment.to_dict()
+
+        session.close()
+        
+        return jsonify(appointment_data), 201
+    else:
+        return jsonify({'error': 'Unsupported Media Type'}), 415
 
 @bp.route('/appointments/<int:appointment_id>', methods=['GET'])
 def get_appointment(appointment_id):
@@ -369,21 +419,50 @@ def delete_appointment(appointment_id):
 #Defining end-points to perform CRUD for medical records
 
 @bp.route('/medical_records', methods=['GET'])
+@login_required  # Assuming you have a login decorator to protect this route
 def get_medical_records():
+    patient_id = current_user.id
     session = Session()
-    medical_records = session.query(MedicalRecord).all()
+    medical_records = session.query(MedicalRecord).options(joinedload(MedicalRecord.doctor)).filter_by(patient_id=patient_id).all()
     session.close()
     return jsonify([medical_record.to_dict() for medical_record in medical_records])
+
 
 @bp.route('/medical_records', methods=['POST'])
 def create_medical_record():
     session = Session()
     data = request.json
-    medical_record = MedicalRecord(**data)
+
+    # Extract the patient username from the form data
+    patient_username = data.get('patient')
+    print(f"Patient username: {patient_username}")
+
+    # Find the patient with the given username
+    patient = session.query(Patient).filter_by(username=patient_username).first()
+    if not patient:
+        print("Patient not found")
+        return jsonify(error='Patient not found'), 404
+
+    # Create the new MedicalRecord object
+    medical_record = MedicalRecord(
+        patient=patient,
+        doctor=current_user,  # Assuming you have the current user stored in current_user variable
+        diagnosis=data.get('diagnosis'),
+        prescription=data.get('prescription')
+    )
+
     session.add(medical_record)
     session.commit()
+
+    # Refresh the medical_record object to ensure it is associated with the session
+    session.refresh(medical_record)
+
     session.close()
+
+    print("Medical record saved:", medical_record.to_dict())
     return jsonify(medical_record.to_dict()), 201
+
+
 
 @bp.route('/medical_records/<int:medical_record_id>', methods=['GET'])
 def get_medical_record(medical_record_id):

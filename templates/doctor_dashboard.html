@@ -1,27 +1,407 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Doctor Dashboard</title>
+    <title>Remote Doctor Application</title>
+    <style>
+        body {
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .sidebar {
+            background-color: #2ecc71;
+            color: #fff;
+            width: 200px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 80px;
+        }
+
+        .sidebar a {
+            color: #fff;
+            text-decoration: none;
+            margin-bottom: 10px;
+            padding: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar a:hover {
+            background-color: #27ae60; /* Change background color on hover */
+        }
+
+        .header {
+            background-color: #fff;
+            color: #1e824c;
+            padding: 10px;
+            text-align: center;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            flex-grow: 1; /* Allow the text to take up remaining space */
+            text-align: center;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1; /* Allow the content to take up remaining space */
+        }
+
+        .header-content h1 {
+            margin: 0;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .header-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-buttons button {
+            background-color: #1e824c;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .doctors-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: 0 auto;
+            max-width: 800px; /* Adjust the width as per your preference */
+        }
+
+        .footer {
+            background-color: #1e824c;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .button-container button {
+            margin: 0 10px;
+        }
+        
+        #medical-record-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: 0 auto;
+            max-width: 800px; /* Adjust the width as per your preference */
+            margin-top: 50px; /* Optional: Adjust the top margin as per your preference */
+        }
+
+        #medical-record-form-fields div {
+            margin-bottom: 10px;
+        }
+
+        #medical-record-form-fields label {
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        #medical-record-form-fields input[type="text"],
+        #medical-record-form-fields textarea {
+            width: 100%;
+            height: 40px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #medical-record-form-fields button[type="submit"] {
+            background-color: #1e824c;
+            color: #fff;
+            border: none;
+            padding: 15px 30px; /* Adjust padding to increase button size */
+            margin-top: 20px;
+            cursor: pointer;
+            font-size: 18px; /* Adjust font size */
+        }
+
+        #profile-settings-form {
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: center;
+           text-align: center;
+           margin: 0 auto;
+           max-width: 800px; /* Adjust the width as per your preference */
+           margin-top: 50px; /* Optional: Adjust the top margin as per your preference */
+        }
+
+        #profile-settings-form div {
+           margin-bottom: 10px;
+        }
+
+        #profile-settings-form label {
+           margin-bottom: 5px;
+           display: block;
+           width: 100%;
+        }
+
+        #profile-settings-form input[type="text"],
+        #profile-settings-form input[type="password"] {
+           width: 300px;
+           height: 20px;
+           padding: 10px;
+           box-sizing: border-box;
+        }
+
+        #profile-settings-form button[type="submit"] {
+           background-color: #1e824c;
+           color: #fff;
+           border: none;
+           padding: 15px 30px; /* Adjust padding to increase button size */
+           margin-top: 20px;
+           cursor: pointer;
+           font-size: 18px; /* Adjust font size */
+        }
+
+
+    </style>
 </head>
 <body>
-    <h1>Welcome to the Doctor Dashboard</h1>
+    <div class="sidebar">
+        <a id="dashboard-tab" href="#">Dashboard</a>
+        <a id="appointments-tab" href="#">My Appointments</a>
+        <a id="medical-record" href="#">Medical Records</a>
+        <a id="profile-settings" href="#">Profile Settings</a>
+        <a href="{{ url_for('remote_doctor.logout') }}">Logout</a>
+    </div>
+
+    <div class="header">
+        <div class="header-content">
+            <h1>WELCOME TO REMOTE DOCTOR</h1>
+            <div class="header-buttons">
+                <button id="notification-button">Notification</button>
+                <button id="logout-button"><a href="{{ url_for('remote_doctor.logout') }}">Logout</a></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div id="doctors-info" class="doctors-info"></div>
+        
+        <div id="medical-record-form" style="display: none;">
+            <h3>Create Medical Record</h3>
+            <form id="medical-record-form-fields" action="/medical_records" method="POST">
+
+                <div>
+                    <label for="patient-input">Patient Username:</label>
+                    <input type="text" id="patient-select" name="patient" required>
+
+                </div>
+                <div>
+                    <label for="diagnosis">Diagnosis:</label>
+                    <input type="text" id="diagnosis" name="diagnosis" required>
+                </div>
+                <div>
+                    <label for="prescription">Prescription:</label>
+                    <input type="text" id="prescription" name="prescription" required>
+                </div>
+                <div>
+                    <button id="save-medical-record-button" type="submit">Save Medical Record</button>
+                </div>
+            </form>
+        </div>
+
+
+        <div id="profile-settings-form" style="display: none;">
+            <h3>Update Profile</h3>
+            <form id="profile-settings-form-fields">
+                <div>
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div>
+                    <label for="phone">Phone:</label>
+                    <input type="text" id="phone" name="phone" required>
+                </div>
+                <div>
+                    <label for="address">Address:</label>
+                    <input type="text" id="address" name="address" required>
+                </div>
+                <div>
+                    <button id="update-profile-button" type="submit">Update Profile</button>
+                </div>
+            </form>
+        </div>
+        
+    </div>
+
+    <div class="footer">
+        <p>All rights reserved</p>
+    </div>    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        const doctorsInfo = document.getElementById('doctors-info');
+        const logoutButton = document.getElementById('logout-button');
+        const medicalRecordButton = document.getElementById('medical-record');
+        const medicalRecordForm = document.getElementById('medical-record-form');
+        const profileSettingsForm = document.getElementById('profile-settings-form');
+        
+
+        medicalRecordButton.addEventListener('click', function() {
+            // Toggle the visibility of the medical record form
+            $(medicalRecordForm).toggle();
+
+            // Hide other elements when the medical record form is shown
+            if ($(medicalRecordForm).is(':visible')) {
+                $(doctorsInfo).hide();
+                $(profileSettingsForm).hide();
+            }
+        });
+
+        // Handle form submission
+    $('#medical-record-form-fields').on('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission behavior
+        
+        // Get the form data
+        const formData = {
+            patient: $('#patient-select').val(),
+            diagnosis: $('#diagnosis').val(),
+            prescription: $('#prescription').val()
+        };
+
+        // Send the form data to the server
+        fetch('/medical_records', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Handle the response from the server
+            console.log('Medical record saved:', data);
+            // Reset the form if needed
+            $('#medical-record-form-fields')[0].reset();
+        })
+        .catch(error => {
+            console.log('Error saving medical record:', error);
+        });
+    });
+
+        // Handle profile settings form submission
+    $('#profile-settings-form-fields').on('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission behavior
     
-    <!-- Display relevant information for doctors -->
-    <h2>Appointments</h2>
-    <ul>
-        {% for appointment in appointments %}
-            <li>{{ appointment.date }} - {{ appointment.patient_name }}</li>
-        {% endfor %}
-    </ul>
-    
-    <h2>Patient Records</h2>
-    <ul>
-        {% for record in patient_records %}
-            <li>{{ record.patient_name }} - {{ record.diagnosis }}</li>
-        {% endfor %}
-    </ul>
-    
-    <!-- Other dashboard components or sections -->
+        // Get the form data
+        const formData = {
+            name: $('#name').val(),
+            email: $('#email').val(),
+            phone: $('#phone').val(),
+            address: $('#address').val()
+        };
+
+        // Send the form data to the server
+        fetch('/update_profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Handle the response from the server
+            console.log('Profile updated:', data);
+        })
+        .catch(error => {
+            console.log('Error updating profile:', error);
+        });
+    });
+
+
+        
+        // Add click event listeners for other buttons to hide the medical record form
+        document.getElementById('dashboard-tab').addEventListener('click', function() {
+            $(medicalRecordForm).hide();
+            $(doctorsInfo).show();
+            $(medicalRecordList).hide();
+        });
+
+        document.getElementById('appointments-tab').addEventListener('click', function() {
+            $(medicalRecordForm).hide();
+            $(doctorsInfo).hide();
+            $(medicalRecordList).hide();
+            $(profileSettingsForm).hide();
+        });
+
+        document.getElementById('profile-settings').addEventListener('click', function() {
+            $(medicalRecordForm).hide();
+            $(doctorsInfo).hide();
+            $(medicalRecordList).hide();
+            $(profileSettingsForm).show();
+        });
+
+        logoutButton.addEventListener('click', () => {
+            fetch('/logout', { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        // Redirect to the login page or perform other actions
+                        window.location.href = '/login';
+                    } else {
+                        console.log('Logout failed');
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+        });
+
+        fetch('/doctor_username')
+            .then(response => response.json())
+            .then(data => {
+                const loggedInUsername = '{{ current_user.username }}';
+                const html = `<h2>Hello, ${loggedInUsername}!</h2>`;
+                doctorsInfo.innerHTML = html;
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    });
+</script>
+
+
 </body>
 </html>
-

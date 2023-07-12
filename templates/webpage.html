@@ -80,17 +80,7 @@
             height: auto;
             margin-bottom: 250px;
         }
-        .register-patient-button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #2ecc71;
-            border: none;
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-         .register-doctor-button {
+        .register-button {
             margin-top: 20px;
             padding: 10px 20px;
             background-color: #2ecc71;
@@ -131,7 +121,7 @@
             font-size: 32px; /* Adjust the font size as needed */
             color: white;
         }
-
+        
 
 
     </style>
@@ -156,9 +146,8 @@
         <div class="text">
             <h1>TAKE CHARGE OF YOUR HEALTH, TALK TO A DOCTOR TODAY!.</h1>
             <p>Welcome to Remote Doctor! Take control of your health today by connecting with our expert doctors online. Whether you have a medical concern or need professional advice, we're here to assist you. With Remote Doctor, you can easily schedule appointments, access your health records, and receive prescriptions from the comfort of your home. Don't wait any longer – start your journey towards better health by signing up and exploring our comprehensive healthcare services.</p>
-            <button class="register-patient-button" onclick="location.href='/register/patient'">Register as a Patient</button>
-            <button class="register-doctor-button" onclick="location.href='/register/doctor'">Register as a Doctor</button>
-        
+            <button class="register-button" onclick="location.href='/register'">Register</button>
+            
 
         </div>
         <div class="image">
@@ -196,8 +185,10 @@
             </p>
             
             </div>
-                    <button class="close-button" onclick="goToHomePage()">Close</button>
-        </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="close-button" onclick="goToHomePage()">Close</button>
+            </div>
+        </div>    
         
     </div>
 

@@ -148,133 +148,87 @@
         #appointment-form-fields button {
             margin-top: 10px;
         }
+        #medical-record-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .medical-records-wrapper {
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: center;
+           height: 100%;
+        }
 
-        /* Add a class to indicate the active sidebar button */
-        .sidebar a.active {
-        background-color: #006400;
+        .medical-records-wrapper h2 {
+           margin-bottom: 20px; /* Add margin at the bottom of the heading */
+        }
+        .serial-number {
+           padding-right: 20px; /* Adjust the spacing as needed */
+        }
+
+        .diagnosis {
+           padding-right: 20px; /* Adjust the spacing as needed */
+        }
+
+        .prescription {
+           padding-right: 20px; /* Adjust the spacing as needed */
+        }
+
+
+
+
+
         
-        }
-
-        /* Hide the content of inactive buttons */
-        .sidebar-content:not(.active) {
-            display: none;
-       
-        }
-
-        .sidebar-content {
-            display: none;
-        }
-
-        .sidebar-content.active {
-            display: block;
-        }
-
-
-
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        
+    
         $(document).ready(function() {
-            const sidebarButtons = document.getElementsByClassName('sidebar-button');
             const mainContent = document.querySelector('.main-content');
             const dashboardButton = document.getElementById('dashboard-tab');
             const doctorsButton = document.getElementById('doctors-tab');
-            const patientInfo = document.getElementById('patient-info');
             const doctorsInfo = document.getElementById('doctors-info');
+            const patientInfo = document.getElementById('patient-info');
             const logoutButton = document.getElementById('logout-button');
-    
-            // Hide all sidebar content sections initially
-            $('.sidebar-content').hide();
-    
-            // Handle click events on sidebar buttons
-            $('.sidebar a').click(function() {
-                // Remove the "active" class from all sidebar buttons
-                $('.sidebar a').removeClass('active');
+            const appointmentButton = document.getElementById('appointments-tab');
+            const appointmentForm = document.getElementById('appointment-form');
+            
 
-                // Hide all sidebar content sections
-                $('.sidebar-content').removeClass('active');
-                
-    
-                // Show the corresponding content section based on the clicked button
-                var contentId = $(this).attr('id') + '-content';
-                $('#' + contentId).show();
-
-                // Add the "active" class to the clicked sidebar button
-                $(this).addClass('active');
-
-                // Hide the content of other buttons
-                $('.sidebar-content').not('.active').hide();
-                
-                // Show the appointment buttons if the "Appointments" button is clicked
-                if ($(this).attr('id') === 'appointments-tab') {
-                    $('.button-container').removeClass('hidden');
-                } else {
-                    $('.button-container').addClass('hidden');
-                }
-                 
+            appointmentButton.addEventListener('click', function() {
+                $(appointmentForm).show();
+                $(patientInfo).hide();
+                document.getElementById('doctor-list').classList.add('hidden'); // Hide the doctor list
+                $('#medical-record-container').hide(); // Hide the medical record container
             });
 
-            // Show appointment form when "Schedule an Appointment" button is clicked
-            $('#schedule-appointment-button').click(function() {
-                $('#appointment-buttons').hide();
-                $('#appointment-form').show();
-                fetchDoctors();
+
+            // Add click event listeners for other buttons to hide the medical record form
+            document.getElementById('dashboard-tab').addEventListener('click', function() {
+               $(appointmentForm).hide();
+               $(patientInfo).show();
+               $('#medical-record-container').hide(); // Hide the medical record container
+               document.getElementById('doctor-list').classList.add('hidden'); // Hide the doctor list
             });
 
-            // Fetch doctors and populate the appointment form select options
-            function fetchDoctors() {
-                $.get('/doctors-json', function(data) {
-                    var doctorSelect = $('#appointment-doctor');
-                    doctorSelect.empty();
-                    doctorSelect.append('<option value="">Select a doctor</option>');
-                    $.each(data, function(index, doctor) {
-                        var option = $('<option>', { value: doctor.id, text: doctor.name });
-                        doctorSelect.append(option);
-                    });
-                });
-            }
-    
-            // Fetch appointment history and display it
-            function fetchAppointmentHistory() {
-                $.get('/appointment_history', function(data) {
-                    var appointmentList = $('#appointment-history-list');
-                    appointmentList.empty();
-                    if (data.length === 0) {
-                        appointmentList.append('<p>No appointments found.</p>');
-                    } else {
-                        $.each(data, function(index, appointment) {
-                            var listItem = $('<div>').text(appointment.date + ' - ' + appointment.doctor);
-                            appointmentList.append(listItem);
-                        });
-                    }
-                });
-            }
-    
-            // Handle form submission
-            $('#appointment-form-fields').submit(function(e) {
-                e.preventDefault();
-    
-                var appointmentDate = $('#appointment-date').val();
-                var appointmentNotes = $('#appointment-notes').val();
-                var appointmentDoctor = $('#appointment-doctor option:selected').text();
-    
-                // Store appointment details in the database
-                var data = {
-                    date: appointmentDate,
-                    notes: appointmentNotes,
-                    doctor: appointmentDoctor
-                };
-    
-                $.post('/appointments', data, function(response) {
-                    console.log(response);
-                    // Reset the form
-                    $('#appointment-form-fields')[0].reset();
-    
-                    // Hide the appointment form and show the appointment buttons again
-                    $('#appointment-form').hide();
-                    $('#appointment-buttons').show();
-                });
+
+            // Fetch the list of doctors from the server
+            fetch('/doctors-json')
+                .then(response => response.json())
+                .then(data => {
+                    const doctorsSelect = document.getElementById('appointment-doctor');
+
+                    // Iterate over the list of doctors and create an option element for each one
+                   data.doctors.forEach(doctor => {
+                       const option = document.createElement('option');
+                       option.value = doctor.id;
+                       option.textContent = doctor.name;
+                       doctorsSelect.appendChild(option);
+                   });
             });
+    
     
             logoutButton.addEventListener('click', () => {
                 fetch('/logout', { method: 'POST' })
@@ -291,26 +245,21 @@
                     });
             });
     
-            // Hide the appointment buttons initially
-            $('.button-container').addClass('hidden');
-    
-            dashboardButton.addEventListener('click', () => {
-                fetch('/patient') // Replace with the correct route to fetch patient data
-                    .then(response => response.json())
-                    .then(data => {
-                        const loggedInUsername = '{{ current_user.username }}';
-                        const html = `<h2>Hello, ${loggedInUsername}!</h2>`;
-                        patientInfo.innerHTML = html;
-                    })
-                    .catch(error => {
-                        console.log(error);
-                    });
-    
-                mainContent.classList.add('active');
-            });
+                    
+            fetch('/patient_username') // Replace with the correct route to fetch patient data
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Debugging statement
+                    const loggedInUsername = data.username;
+                    const html = `<h2>Hello, ${loggedInUsername}!</h2>`;
+                    patientInfo.innerHTML = html;
+                })
+                .catch(error => {
+                    console.log(error);
+                });
 
             doctorsButton.addEventListener('click', function () {
-                fetch('{{ url_for('remote_doctor.doctors') }}')
+                fetch('{{ url_for('remote_doctor.doctor') }}')
                     .then(response => response.text())
                     .then(data => {
                         document.getElementById('doctor-list').innerHTML = data;
@@ -320,31 +269,47 @@
                     });
     
                 mainContent.classList.add('active');
+                $(patientInfo).hide();
+                $(appointmentForm).hide();
+                document.getElementById('doctor-list').classList.remove('hidden'); // Show the doctor list
+                $('#medical-record-container').hide(); // Hide the medical record container
+            });
+            
+            $('#medical-record').on('click', function() {
+                fetchMedicalRecords();
+                $('#medical-record-container').show();
+                $(patientInfo).hide();
+                $(appointmentForm).hide();
+                document.getElementById('doctor-list').classList.add('hidden'); // Hide the doctor list
             });
 
-            // Fetch and display the profile details
-            function fetchProfileDetails() {
-                $.get('/profile', function(data) {
-                    var profileContent = $('#profile-content');
-                    profileContent.empty();
-
-                    // Construct the profile details HTML
-                    var html = '<h3>Profile Settings</h3>';
-                    html += '<table>';
-                    html += '<tr><td>Name:</td><td>' + data.name + '</td></tr>';
-                    html += '<tr><td>Age:</td><td>' + data.age + '</td></tr>';
-                    html += '<tr><td>Gender:</td><td>' + data.gender + '</td></tr>';
-                    html += '<tr><td>Email:</td><td>' + data.email + '</td></tr>';
-                    html += '<tr><td>Phone:</td><td>' + data.phone + '</td></tr>';
-                    html += '<tr><td>Address:</td><td>' + data.address + '</td></tr>';
-                    html += '<tr><td>Username:</td><td>' + data.username + '</td></tr>';
-                    html += '</table>';
-
-                    profileContent.html(html);
+            function fetchMedicalRecords() {
+                $.get('/medical_records', function(data) {
+                    var medicalRecordList = $('#medical-record-list');
+                    medicalRecordList.empty();
+    
+                    if (data.length === 0) {
+                        medicalRecordList.append('<p>No medical records found.</p>');
+                    } else {
+                        var table = $('<table>').addClass('medical-records-table');
+                        var headerRow = $('<tr>').html('<th>S/N<th>Diagnosis</th><th>Prescription</th>');
+                        table.append(headerRow);
+    
+                        data.forEach(function(record, index) {
+                            var row = $('<tr>');
+                            row.append('<td class="serial-number">' + (index + 1) + '</td>');    
+                            row.append('<td class="diagnosis">' + record.diagnosis + '</td>');
+                            row.append('<td class="prescription">' + record.prescription + '</td>');
+                            //row.append('<td>' + record.doctor.username + '</td>');
+                            table.append(row);
+                        });    
+                        medicalRecordList.append(table);
+                    }
                 });
             }
-            
         });
+
+        
     </script>
     
     
@@ -373,17 +338,20 @@
     <div class="main-content">
            <h2>Doctors</h2>
            <div id="doctor-list"></div>
-            
-    
-            <h2>Appointments</h2>
-            <div class="button-container" id="appointment-buttons">
-                   <button id="schedule-appointment-button">Schedule an Appointment</button>
-                   <button id="appointment-history-button">Appointment History</button>
+
+           <div id="medical-record-container" style="display: none;">
+            <div class="medical-records-wrapper">
+                <h2>Medical Records</h2>
+                <div id="medical-record-list"></div>
             </div>
+           </div>
+
+
 
             <div id="appointment-form" style="display: none;">
                  <h3>Schedule an Appointment</h3>
-                 <form id="appointment-form-fields">
+                 <form id="appointment-form-fields" action="{{ url_for('remote_doctor.create_appointment') }}" method="POST">
+
                      <div>
                          <label for="appointment-date">Date:</label>
                          <input type="date" id="appointment-date" name="date" required>
@@ -402,7 +370,7 @@
                     </div>
 
                     <div>
-                         <button type="submit">Schedule Appointment</button>
+                        <button type="submit">Schedule Appointment</button>
                     </div>
                  </form>
             </div>

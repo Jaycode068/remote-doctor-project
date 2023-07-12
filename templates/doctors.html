@@ -53,11 +53,9 @@
                     <p>Email: {{ doctor.email }}</p>
                     <p>Phone: {{ doctor.phone }}</p>
                     <p>Address: {{ doctor.address }}</p>
-                    <p>Status: <span class="status {% if doctor.username == logged_in_username %}online{% else %}offline{% endif %}">
-    {% if doctor.username == logged_in_username %}Online{% else %}Offline{% endif %}
-</span></p>
-
-                    </p>
+                    <p>Status: <span class="status {% if online_status.get(doctor.username, False) %}online{% else %}offline{% endif %}">
+                        {% if online_status.get(doctor.username, False) %}Online{% else %}Offline{% endif %}
+                    </span></p>
                 </div>
             {% endfor %}
         </div>
