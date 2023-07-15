@@ -176,6 +176,52 @@
            padding-right: 20px; /* Adjust the spacing as needed */
         }
 
+        #profile-settings-form {
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: center;
+           text-align: center;
+           margin: 0 auto;
+           max-width: 800px;
+           margin-top: 50px;
+        }
+
+        #profile-settings-form div {
+           margin-bottom: 10px;
+        }
+
+        #profile-settings-form label {
+           margin-bottom: 5px;
+           display: block;
+           width: 100%;
+        }
+
+        #profile-settings-form input[type="text"],
+        #profile-settings-form input[type="password"] {
+           width: 300px;
+           height: 20px;
+           padding: 10px;
+           box-sizing: border-box;
+        }
+
+        #profile-settings-form input[type="email"] {
+           width: 100%; /* Change the width to match the other input spaces */
+           height: 20px;
+           padding: 10px;
+           box-sizing: border-box;
+        }
+
+        #profile-settings-form button[type="submit"] {
+           background-color: #1e824c;
+           color: #fff;
+           border: none;
+           padding: 15px 30px;
+           margin-top: 20px;
+           cursor: pointer;
+           font-size: 18px;
+        }
+
 
 
 
@@ -195,10 +241,12 @@
             const logoutButton = document.getElementById('logout-button');
             const appointmentButton = document.getElementById('appointments-tab');
             const appointmentForm = document.getElementById('appointment-form');
+            const profileSettingsForm = document.getElementById('profile-settings-form');
             
 
             appointmentButton.addEventListener('click', function() {
                 $(appointmentForm).show();
+                $(profileSettingsForm).hide();
                 $(patientInfo).hide();
                 document.getElementById('doctor-list').classList.add('hidden'); // Hide the doctor list
                 $('#medical-record-container').hide(); // Hide the medical record container
@@ -208,9 +256,18 @@
             // Add click event listeners for other buttons to hide the medical record form
             document.getElementById('dashboard-tab').addEventListener('click', function() {
                $(appointmentForm).hide();
+               $(profileSettingsForm).hide();
                $(patientInfo).show();
                $('#medical-record-container').hide(); // Hide the medical record container
                document.getElementById('doctor-list').classList.add('hidden'); // Hide the doctor list
+            });
+
+            document.getElementById('profile-settings').addEventListener('click', function() {
+                $(profileSettingsForm).show();
+                $(patientInfo).hide();
+                $(appointmentForm).hide();
+                $('#medical-record-container').hide(); // Hide the medical record container
+                document.getElementById('doctor-list').classList.add('hidden'); // Hide the doctor list
             });
 
 
@@ -271,6 +328,7 @@
                 mainContent.classList.add('active');
                 $(patientInfo).hide();
                 $(appointmentForm).hide();
+                $(profileSettingsForm).hide();
                 document.getElementById('doctor-list').classList.remove('hidden'); // Show the doctor list
                 $('#medical-record-container').hide(); // Hide the medical record container
             });
@@ -280,6 +338,7 @@
                 $('#medical-record-container').show();
                 $(patientInfo).hide();
                 $(appointmentForm).hide();
+                $(profileSettingsForm).hide();
                 document.getElementById('doctor-list').classList.add('hidden'); // Hide the doctor list
             });
 
@@ -374,6 +433,32 @@
                     </div>
                  </form>
             </div>
+
+            <div id="profile-settings-form" style="display: none;">
+                <h3>Update Profile</h3>
+                <form id="profile-settings-form-fields">
+                    <div>
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div>
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div>
+                        <label for="phone">Phone:</label>
+                        <input type="text" id="phone" name="phone" required>
+                    </div>
+                    <div>
+                        <label for="address">Address:</label>
+                        <input type="text" id="address" name="address" required>
+                    </div>
+                    <div>
+                        <button id="update-profile-button" type="submit">Update Profile</button>
+                    </div>
+                </form>
+            </div>
+
         </div>
             <!-- Main Content Here -->
             <div id="patient-info" class="patient-info"></div>

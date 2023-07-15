@@ -216,11 +216,6 @@ def update_profile():
         print('Error updating profile:', e)
         return jsonify(error=str(e)), 500
 
-
-
-
-
-"""
 @bp.route('/doctors/<int:doctor_id>', methods=['GET'])
 def get_doctor(doctor_id):
     session = Session()
@@ -257,7 +252,6 @@ def delete_doctor(doctor_id):
     session.commit()
     session.close()
     return '', 204
-"""
 
 #Defining end-points to perform CRUD for patients
 
@@ -345,10 +339,30 @@ def delete_patient(patient_id):
 
 @bp.route('/appointments', methods=['GET'])
 def get_appointments():
+    # Get the currently logged-in doctor
+    current_doctor = current_user
+
+    # Query the appointments table to get the appointments associated with the current doctor
     session = Session()
-    appointments = session.query(Appointment).all()
+    appointments = (
+        session.query(Appointment)
+        .filter_by(doctor_id=current_doctor.id)
+        .all()
+    )
     session.close()
-    return jsonify([appointment.to_dict() for appointment in appointments])
+
+    appointment_details = [
+        {
+            'id': appointment.id,
+            'patient_id': appointment.patient_id,
+            'date': appointment.date,
+            'notes': appointment.notes
+        }
+        for appointment in appointments
+    ]
+
+    return jsonify(appointment_details)
+
 
 @bp.route('/appointments', methods=['POST'])
 def create_appointment():

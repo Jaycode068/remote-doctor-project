@@ -94,6 +94,9 @@ class Patient(User):
     age = Column(Integer)
     gender = Column(String(20))
 
+    # Define the relationship with User table
+    user = relationship('User', backref='patient')
+
     def to_dict(self):
         return {
             'id': self.id,

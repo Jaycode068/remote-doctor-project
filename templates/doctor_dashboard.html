@@ -34,14 +34,13 @@
         }
 
         .sidebar a:hover {
-            background-color: #27ae60; /* Change background color on hover */
+            background-color: #27ae60;
         }
 
         .header {
             background-color: #fff;
             color: #1e824c;
             padding: 10px;
-            text-align: center;
             text-align: center;
             display: flex;
             justify-content: center;
@@ -51,7 +50,7 @@
         .header h1 {
             margin: 0;
             font-size: 24px;
-            flex-grow: 1; /* Allow the text to take up remaining space */
+            flex-grow: 1;
             text-align: center;
         }
 
@@ -59,7 +58,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-grow: 1; /* Allow the content to take up remaining space */
+            flex-grow: 1;
         }
 
         .header-content h1 {
@@ -89,7 +88,7 @@
             justify-content: center;
             text-align: center;
             margin: 0 auto;
-            max-width: 800px; /* Adjust the width as per your preference */
+            max-width: 800px;
         }
 
         .footer {
@@ -120,8 +119,8 @@
             justify-content: center;
             text-align: center;
             margin: 0 auto;
-            max-width: 800px; /* Adjust the width as per your preference */
-            margin-top: 50px; /* Optional: Adjust the top margin as per your preference */
+            max-width: 800px;
+            margin-top: 50px;
         }
 
         #medical-record-form-fields div {
@@ -145,10 +144,10 @@
             background-color: #1e824c;
             color: #fff;
             border: none;
-            padding: 15px 30px; /* Adjust padding to increase button size */
+            padding: 15px 30px;
             margin-top: 20px;
             cursor: pointer;
-            font-size: 18px; /* Adjust font size */
+            font-size: 18px;
         }
 
         #profile-settings-form {
@@ -158,8 +157,8 @@
            justify-content: center;
            text-align: center;
            margin: 0 auto;
-           max-width: 800px; /* Adjust the width as per your preference */
-           margin-top: 50px; /* Optional: Adjust the top margin as per your preference */
+           max-width: 800px;
+           margin-top: 50px;
         }
 
         #profile-settings-form div {
@@ -180,14 +179,39 @@
            box-sizing: border-box;
         }
 
+        #profile-settings-form input[type="email"] {
+           width: 100%; /* Change the width to match the other input spaces */
+           height: 20px;
+           padding: 10px;
+           box-sizing: border-box;
+        }
+
         #profile-settings-form button[type="submit"] {
            background-color: #1e824c;
            color: #fff;
            border: none;
-           padding: 15px 30px; /* Adjust padding to increase button size */
+           padding: 15px 30px;
            margin-top: 20px;
            cursor: pointer;
-           font-size: 18px; /* Adjust font size */
+           font-size: 18px;
+        }
+
+        .appointments-list {
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: center;
+           text-align: center;
+           margin: 0 auto;
+           max-width: 800px; /* Adjust the width as per your preference */
+           margin-top: 50px; /* Optional: Adjust the top margin as per your preference */
+        }
+
+        .appointment-box {
+           border: 1px solid #ccc;
+           padding: 10px;
+           margin-bottom: 10px;
+           background-color: #f9f9f9;
         }
 
 
@@ -214,15 +238,15 @@
 
     <div class="main-content">
         <div id="doctors-info" class="doctors-info"></div>
+        <div id="appointments-list" class="appointments-list"></div>
+
         
         <div id="medical-record-form" style="display: none;">
             <h3>Create Medical Record</h3>
             <form id="medical-record-form-fields" action="/medical_records" method="POST">
-
                 <div>
                     <label for="patient-input">Patient Username:</label>
                     <input type="text" id="patient-select" name="patient" required>
-
                 </div>
                 <div>
                     <label for="diagnosis">Diagnosis:</label>
@@ -237,7 +261,6 @@
                 </div>
             </form>
         </div>
-
 
         <div id="profile-settings-form" style="display: none;">
             <h3>Update Profile</h3>
@@ -268,140 +291,156 @@
 
     <div class="footer">
         <p>All rights reserved</p>
-    </div>    
+    </div>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function() {
-        const doctorsInfo = document.getElementById('doctors-info');
-        const logoutButton = document.getElementById('logout-button');
-        const medicalRecordButton = document.getElementById('medical-record');
-        const medicalRecordForm = document.getElementById('medical-record-form');
-        const profileSettingsForm = document.getElementById('profile-settings-form');
-        
+    <script>
+        $(document).ready(function() {
+            const doctorsInfo = document.getElementById('doctors-info');
+            const logoutButton = document.getElementById('logout-button');
+            const medicalRecordButton = document.getElementById('medical-record');
+            const medicalRecordForm = document.getElementById('medical-record-form');
+            const profileSettingsForm = document.getElementById('profile-settings-form');
+            const appointmentsButton = document.getElementById('appointments-tab');
+            const appointmentsList = document.getElementById('appointments-list');
 
-        medicalRecordButton.addEventListener('click', function() {
-            // Toggle the visibility of the medical record form
-            $(medicalRecordForm).toggle();
+            
+            medicalRecordButton.addEventListener('click', function() {
+                $(medicalRecordForm).toggle();
+                if ($(medicalRecordForm).is(':visible')) {
+                    $(doctorsInfo).hide();
+                    $(profileSettingsForm).hide();
+                    $(appointmentsList).hide();
+                }
+            });
 
-            // Hide other elements when the medical record form is shown
-            if ($(medicalRecordForm).is(':visible')) {
+            $('#medical-record-form-fields').on('submit', function(event) {
+                event.preventDefault();
+                const formData = {
+                    patient: $('#patient-select').val(),
+                    diagnosis: $('#diagnosis').val(),
+                    prescription: $('#prescription').val()
+                };
+                fetch('/medical_records', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Medical record saved:', data);
+                    $('#medical-record-form-fields')[0].reset();
+                })
+                .catch(error => {
+                    console.log('Error saving medical record:', error);
+                });
+            });
+
+            $('#profile-settings-form-fields').on('submit', function(event) {
+                event.preventDefault();
+                const formData = {
+                    name: $('#name').val(),
+                    email: $('#email').val(),
+                    phone: $('#phone').val(),
+                    address: $('#address').val()
+                };
+                fetch('/update_profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Profile updated:', data);
+                })
+                .catch(error => {
+                    console.log('Error updating profile:', error);
+                });
+            });
+
+            appointmentsButton.addEventListener('click', function() {
+                // Fetch appointments data from the server
+                fetch('/appointments')
+                    .then(response => response.json())
+                    .then(appointments => {
+                        console.log('Appointments:', appointments); // Log the fetched appointments
+
+                        // Create an HTML list to display the appointments
+                        const appointmentsHTML = appointments.map(appointment => `
+                            <div class="appointment-box">
+                                <div class="appointment-container">
+                                    <strong>Appointment ID:</strong> ${appointment.id}<br>
+                                    <strong>Patient ID:</strong> ${appointment.patient_id}<br>
+                                    <strong>Date:</strong> ${appointment.date}<br>
+                                    <strong>Notes:</strong> ${appointment.notes}
+                                </div>
+                            </div>
+                        `).join('');
+
+                        // Update the appointments list with the fetched data
+                        appointmentsList.innerHTML = appointmentsHTML;
+
+                       // Show the appointments list and hide other elements
+                       $(medicalRecordForm).hide();
+                       $(doctorsInfo).hide();
+                       $(profileSettingsForm).hide();
+                       $(appointmentsList).show();
+                    })
+                    .catch(error => {
+                        console.log('Error fetching appointments:', error);
+                    });
+            });
+
+
+            document.getElementById('dashboard-tab').addEventListener('click', function() {
+                $(medicalRecordForm).hide();
+                $(doctorsInfo).show();
+                $(profileSettingsForm).hide();
+                $(appointmentsList).hide();
+            });
+
+            document.getElementById('appointments-tab').addEventListener('click', function() {
+                $(medicalRecordForm).hide();
                 $(doctorsInfo).hide();
                 $(profileSettingsForm).hide();
-            }
-        });
+            });
 
-        // Handle form submission
-    $('#medical-record-form-fields').on('submit', function(event) {
-        event.preventDefault(); // Prevent the default form submission behavior
-        
-        // Get the form data
-        const formData = {
-            patient: $('#patient-select').val(),
-            diagnosis: $('#diagnosis').val(),
-            prescription: $('#prescription').val()
-        };
+            document.getElementById('profile-settings').addEventListener('click', function() {
+                $(medicalRecordForm).hide();
+                $(profileSettingsForm).show();
+                $(doctorsInfo).hide();
+                $(appointmentsList).hide();
+            });
 
-        // Send the form data to the server
-        fetch('/medical_records', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Handle the response from the server
-            console.log('Medical record saved:', data);
-            // Reset the form if needed
-            $('#medical-record-form-fields')[0].reset();
-        })
-        .catch(error => {
-            console.log('Error saving medical record:', error);
-        });
-    });
+            logoutButton.addEventListener('click', () => {
+                fetch('/logout', { method: 'POST' })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = '/login';
+                        } else {
+                            console.log('Logout failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+            });
 
-        // Handle profile settings form submission
-    $('#profile-settings-form-fields').on('submit', function(event) {
-        event.preventDefault(); // Prevent the default form submission behavior
-    
-        // Get the form data
-        const formData = {
-            name: $('#name').val(),
-            email: $('#email').val(),
-            phone: $('#phone').val(),
-            address: $('#address').val()
-        };
-
-        // Send the form data to the server
-        fetch('/update_profile', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Handle the response from the server
-            console.log('Profile updated:', data);
-        })
-        .catch(error => {
-            console.log('Error updating profile:', error);
-        });
-    });
-
-
-        
-        // Add click event listeners for other buttons to hide the medical record form
-        document.getElementById('dashboard-tab').addEventListener('click', function() {
-            $(medicalRecordForm).hide();
-            $(doctorsInfo).show();
-            $(medicalRecordList).hide();
-        });
-
-        document.getElementById('appointments-tab').addEventListener('click', function() {
-            $(medicalRecordForm).hide();
-            $(doctorsInfo).hide();
-            $(medicalRecordList).hide();
-            $(profileSettingsForm).hide();
-        });
-
-        document.getElementById('profile-settings').addEventListener('click', function() {
-            $(medicalRecordForm).hide();
-            $(doctorsInfo).hide();
-            $(medicalRecordList).hide();
-            $(profileSettingsForm).show();
-        });
-
-        logoutButton.addEventListener('click', () => {
-            fetch('/logout', { method: 'POST' })
-                .then(response => {
-                    if (response.ok) {
-                        // Redirect to the login page or perform other actions
-                        window.location.href = '/login';
-                    } else {
-                        console.log('Logout failed');
-                    }
+            fetch('/doctor_username')
+                .then(response => response.json())
+                .then(data => {
+                    const loggedInUsername = '{{ current_user.username }}';
+                    const html = `<h2>Hello, ${loggedInUsername}!</h2>`;
+                    doctorsInfo.innerHTML = html;
                 })
                 .catch(error => {
                     console.log(error);
                 });
         });
-
-        fetch('/doctor_username')
-            .then(response => response.json())
-            .then(data => {
-                const loggedInUsername = '{{ current_user.username }}';
-                const html = `<h2>Hello, ${loggedInUsername}!</h2>`;
-                doctorsInfo.innerHTML = html;
-            })
-            .catch(error => {
-                console.log(error);
-            });
-    });
-</script>
-
-
+    </script>
 </body>
 </html>
